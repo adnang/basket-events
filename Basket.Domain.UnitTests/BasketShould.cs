@@ -101,5 +101,36 @@ namespace Basket.Domain.UnitTests
             Assert.Equal(addProductResult.Messages.First(), "Maximum item quantity exceeded by 1.");
             Assert.Empty(basket.GetUncommittedChanges());
         }
+        
+        [Fact]
+        public void ReturnMaxQuantityExceeded_WhenAddingExistingProductExceedsMaxQuantity(){
+            var basketId = Guid.NewGuid();
+            var itemId = Guid.NewGuid();
+            var basket = new Basket().LoadFromHistory<Basket>(new Event[]
+            {
+                new BasketCreatedEvent(basketId, Customer, Country, DateTimeOffset.UtcNow),
+                new NewProductAddedEvent(basketId, new ProductBasketItem
+                {
+                    ProductId = 1234,
+                    VariantId = 1235,
+                    Description = "boots",
+                    ItemId = itemId,
+                    Price = new ProductPrice(12.99, "£"),
+                    Quantity = 5
+                }) 
+            });
+
+            var addProductResult = basket.AddVariant(new Variant
+            {
+                ProductId = 1234,
+                VariantId = 1235,
+                Description = "boots",
+                GbpPrice = 15.99
+            }, 7);
+
+            Assert.IsAssignableFrom<AddProductResult.QuantityExceeded>(addProductResult);
+            Assert.Equal(addProductResult.Messages.First(), "Maximum item quantity exceeded by 2.");
+            Assert.Empty(basket.GetUncommittedChanges());
+        }
     }
 }

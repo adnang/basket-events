@@ -56,7 +56,6 @@ namespace Basket.Domain
 
             if (newQuantity > MaximumQuantityForItem)
             {
-                ApplyChange(new ExistingProductUpdatedEvent(Id, matchingItem.ItemId, item, MaximumQuantityForItem));
                 return new AddProductResult.QuantityExceeded(newQuantity - MaximumQuantityForItem);
             }
 
