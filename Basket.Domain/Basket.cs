@@ -23,6 +23,11 @@ namespace Basket.Domain
 
         public AddProductResult AddVariant(Variant item, int quantity)
         {
+            if (quantity > MaximumQuantityForItem)
+            {
+                return new AddProductResult.QuantityExceeded(quantity - MaximumQuantityForItem);
+            }
+
             var matchingItem = Items.Cast<ProductBasketItem>()
                 .FirstOrDefault(x => x.VariantId == item.VariantId);
 
@@ -31,13 +36,18 @@ namespace Basket.Domain
                 return TryUpdate(item, quantity, matchingItem);
             }
 
+            RemoveMatchingExpiredItems(item);
+            
+            ApplyChange(new NewProductAddedEvent(Id, ProductBasketItem.Create(item, quantity)));
+            return new AddProductResult.NewProductAdded();
+        }
+
+        private void RemoveMatchingExpiredItems(Variant item)
+        {
             if (ExpiredItems.Any(x => x.VariantId == item.VariantId))
             {
                 ApplyChange(new ExpiredItemDeletedEvent(Id, item.VariantId));
             }
-            
-            ApplyChange(new NewProductAddedEvent(Id, ProductBasketItem.Create(item, quantity)));
-            return new AddProductResult.NewProductAdded();
         }
 
         private AddProductResult TryUpdate(Variant item, int quantity, ProductBasketItem matchingItem)
@@ -101,5 +111,6 @@ namespace Basket.Domain
         public List<BasketItem> Items { get; set; }
         public List<ExpiredProductBasketItem> ExpiredItems { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
+
     }
 }

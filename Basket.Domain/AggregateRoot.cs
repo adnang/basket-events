@@ -18,8 +18,11 @@ namespace Basket.Domain
             _changes.Clear();
         }
 
-        public void LoadFromHistory(IEnumerable<Event> history) {
+        public T LoadFromHistory<T>(IEnumerable<Event> history)
+            where T : AggregateRoot
+        {
             foreach (var e in history) ApplyChange(e, false);
+            return this as T;
         }
 
         protected void ApplyChange(Event @event) {
