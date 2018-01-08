@@ -30,15 +30,16 @@ namespace Basket.Domain.UnitTests
             {
                 new BasketCreatedEvent(basketId, Customer, Country, DateTimeOffset.UtcNow)
             });
-            
-            basket.AddVariant(new Variant
+
+            var addProductResult = basket.AddVariant(new Variant
             {
                 ProductId = 1234,
                 VariantId = 1235,
                 Description = "boots",
                 GbpPrice = 12.99
             }, 1);
-
+            
+            Assert.IsAssignableFrom<AddProductResult.NewProductAdded>(addProductResult);
             basket.ShouldHaveUncommitted<NewProductAddedEvent>()
                 .WithProperty(e => e.AggregateId, basketId)
                 .WithProperty(e => e.ProductBasketItem.VariantId, 1235)
@@ -63,7 +64,7 @@ namespace Basket.Domain.UnitTests
                 }) 
             });
 
-            basket.AddVariant(new Variant
+            var addProductResult = basket.AddVariant(new Variant
             {
                 ProductId = 1234,
                 VariantId = 1235,
@@ -71,6 +72,7 @@ namespace Basket.Domain.UnitTests
                 GbpPrice = 15.99
             }, 3);
 
+            Assert.IsAssignableFrom<AddProductResult.ProductUpdated>(addProductResult);
             basket.ShouldHaveUncommitted<ExistingProductUpdatedEvent>()
                 .WithProperty(e => e.ItemId, itemId)
                 .WithProperty(e => e.Quantity, 3)
